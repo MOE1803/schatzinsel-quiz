@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil bearbeiten - Schatzinsel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-sections {
+            display: grid;
+            gap: 30px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .section h3 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .avatar-selection {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .avatar-option {
+            text-align: center;
+            cursor: pointer;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .avatar-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .avatar-option.selected {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .avatar-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .current-avatar {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .current-avatar img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #4CAF50;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #4CAF50;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            background: #357638;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .btn-secondary:hover {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .message.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+
+        .message.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: rgba(76, 175, 80, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            color: #4CAF50;
+            font-size: 1rem;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(76, 175, 80, 0.3);
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .profile-container {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .avatar-selection {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="dashboard.html" class="back-btn">← Zurück zum Dashboard</a>
+
+        <div class="header">
+            <h1>🏴‍☠️ Mein Profil ⚓</h1>
+            <p>Bearbeite deine Piratendaten und Avatar</p>
+        </div>
+
+        <div class="profile-container">
+            <div id="messageBox"></div>
+            <div class="loading" id="loadingIndicator">
+                <span class="spinner"></span>
+                Lade Profildaten...
+            </div>
+
+            <div class="profile-sections" id="profileSections" style="display: none;">
+                <!-- Persönliche Daten -->
+                <div class="section">
+                    <h3>👤 Persönliche Daten</h3>
+                    <form id="profileForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="prename">Vorname</label>
+                                <input type="text" id="prename" placeholder="Dein Vorname" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="surname">Nachname</label>
+                                <input type="text" id="surname" placeholder="Dein Nachname" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">E-Mail</label>
+                                <input type="email" id="email" placeholder="deine@email.de" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="username">Benutzername</label>
+                                <input type="text" id="username" disabled readonly>
+                                <small style="opacity: 0.7;">Benutzername kann nicht geändert werden</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Avatar auswählen -->
+                <div class="section">
+                    <h3>🎭 Avatar auswählen</h3>
+                    <div class="current-avatar">
+                        <p>Aktueller Avatar:</p>
+                        <img id="currentAvatar" src="" alt="Aktueller Avatar">
+                    </div>
+                    <div class="avatar-selection">
+                        <div class="avatar-option" data-avatar="avatar1.jpeg">
+                            <img src="avatar1.jpeg" alt="Pirat 1" class="avatar-img"
+                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiM0Q0FGNTB8LyotCjx0ZXh0IHg9IjQwIiB5PSI0OCIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+PiuKAjemBoO+4jzwvdGV4dD4KPC9zdmc+Cg=='">
+                            <div>Pirat 1</div>
+                        </div>
+                        <div class="avatar-option" data-avatar="avatar2.jpeg">
+                            <img src="avatar2.jpeg" alt="Pirat 2" class="avatar-img"
+                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiM2NjY2NjZ8LyotCjx0ZXh0IHg9IjQwIiB5PSI0OCIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+PiuKAjemBoO+4jzwvdGV4dD4KPC9zdmc+Cg=='">
+                            <div>Pirat 2</div>
+                        </div>
+                        <div class="avatar-option" data-avatar="avatar3.jpeg">
+                            <img src="avatar3.jpeg" alt="Papagei" class="avatar-img"
+                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiM0Q0FGNTB8LyotCjx0ZXh0IHg9IjQwIiB5PSI0OCIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjMwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+lpjwvdGV4dD4KPC9zdmc+Cg=='">
+                            <div>Papagei</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Passwort ändern -->
+                <div class="section">
+                    <h3>🔐 Passwort ändern</h3>
+                    <form id="passwordForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="currentPassword">Aktuelles Passwort</label>
+                                <input type="password" id="currentPassword" placeholder="Aktuelles Passwort">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">Neues Passwort</label>
+                                <input type="password" id="newPassword" placeholder="Neues Passwort" minlength="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Passwort bestätigen</label>
+                                <input type="password" id="confirmPassword" placeholder="Passwort bestätigen">
+                            </div>
+                        </div>
+                        <small style="opacity: 0.7;">Lassen Sie die Felder leer, wenn Sie das Passwort nicht ändern möchten</small>
+                    </form>
+                </div>
+
+                <!-- Statistiken -->
+                <div class="section">
+                    <h3>📊 Meine Statistiken</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalGoldtaler">0</div>
+                            <div class="stat-label">💰 Goldtaler</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="completedQuizzes">0</div>
+                            <div class="stat-label">🎯 Abgeschlossene Quizzes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="memberSince">-</div>
+                            <div class="stat-label">⚓ Mitglied seit</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="userRole">Pirat</div>
+                            <div class="stat-label">🏴‍☠️ Rolle</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aktionen -->
+                <div class="section">
+                    <h3>⚡ Aktionen</h3>
+                    <div style="text-align: center;">
+                        <button class="btn" id="saveProfileBtn">💾 Profil speichern</button>
+                        <button class="btn btn-secondary" id="resetBtn">🔄 Zurücksetzen</button>
+                        <button class="btn btn-danger" id="logoutBtn">🚪 Ausloggen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let originalData = {};
+        let selectedAvatar = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            if (!currentUser) {
+                alert('Bitte loggen Sie sich ein.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            loadProfile();
+            setupEventListeners();
+        });
+
+        async function loadProfile() {
+            try {
+                document.getElementById('loadingIndicator').style.display = 'block';
+
+                // Profildaten vom Server laden (aktuellste Version)
+                const response = await fetch(`/api/profile/${currentUser.id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUser = data.profile;
+                    originalData = { ...data.profile };
+                    displayProfile();
+                } else {
+                    // Fallback: localStorage Daten verwenden
+                    originalData = { ...currentUser };
+                    displayProfile();
+                }
+            } catch (error) {
+                console.error('Profil laden Fehler:', error);
+                // Fallback: localStorage Daten verwenden
+                originalData = { ...currentUser };
+                displayProfile();
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('profileSections').style.display = 'block';
+            }
+        }
+
+        function displayProfile() {
+            // Persönliche Daten
+            document.getElementById('prename').value = currentUser.prename || '';
+            document.getElementById('surname').value = currentUser.surname || '';
+            document.getElementById('email').value = currentUser.email || '';
+            document.getElementById('username').value = currentUser.username || '';
+
+            // Avatar
+            selectedAvatar = currentUser.avatar || 'avatar1.jpeg';
+            document.getElementById('currentAvatar').src = selectedAvatar;
+            
+            // Avatar-Optionen markieren
+            document.querySelectorAll('.avatar-option').forEach(option => {
+                option.classList.remove('selected');
+                if (option.dataset.avatar === selectedAvatar) {
+                    option.classList.add('selected');
+                }
+            });
+
+            // Statistiken
+            document.getElementById('totalGoldtaler').textContent = currentUser.totalGoldtaler || 0;
+            document.getElementById('completedQuizzes').textContent = currentUser.completedQuizzes || 0;
+            document.getElementById('userRole').textContent = currentUser.role === 'admin' ? '👑 Admin' : '🏴‍☠️ Pirat';
+            
+            if (currentUser.createdAt) {
+                const memberSince = new Date(currentUser.createdAt).toLocaleDateString('de-DE');
+                document.getElementById('memberSince').textContent = memberSince;
+            }
+        }
+
+        function setupEventListeners() {
+            // Avatar-Auswahl
+            document.querySelectorAll('.avatar-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.avatar-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    selectedAvatar = this.dataset.avatar;
+                    document.getElementById('currentAvatar').src = selectedAvatar;
+                });
+            });
+
+            // Profil speichern
+            document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
+
+            // Reset
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                displayProfile();
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                showMessage('Daten zurückgesetzt', 'success');
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            // Passwort-Bestätigung prüfen
+            document.getElementById('confirmPassword').addEventListener('input', function() {
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = this.value;
+                
+                if (newPassword && confirmPassword && newPassword !== confirmPassword) {
+                    this.style.borderColor = '#f44336';
+                } else {
+                    this.style.borderColor = 'transparent';
+                }
+            });
+        }
+
+        async function saveProfile() {
+            try {
+                const saveBtn = document.getElementById('saveProfileBtn');
+                saveBtn.disabled = true;
+                saveBtn.textContent = '💾 Speichere...';
+
+                // Daten sammeln
+                const prename = document.getElementById('prename').value.trim();
+                const surname = document.getElementById('surname').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                // Validierung
+                if (!prename || !surname || !email) {
+                    showMessage('Bitte füllen Sie alle Pflichtfelder aus', 'error');
+                    return;
+                }
+
+                if (newPassword && newPassword !== confirmPassword) {
+                    showMessage('Passwörter stimmen nicht überein', 'error');
+                    return;
+                }
+
+                if (newPassword && newPassword.length < 5) {
+                    showMessage('Neues Passwort muss mindestens 5 Zeichen haben', 'error');
+                    return;
+                }
+
+                // Request Daten
+                const updateData = {
+                    prename,
+                    surname,
+                    email,
+                    avatar: selectedAvatar
+                };
+
+                if (newPassword) {
+                    updateData.currentPassword = currentPassword;
+                    updateData.newPassword = newPassword;
+                }
+
+                // API Aufruf
+                const response = await fetch(`/api/profile/${currentUser.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Daten aktualisieren
+                    currentUser = result.user;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    // Passwort-Felder leeren
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    
+                    showMessage('✅ Profil erfolgreich aktualisiert!', 'success');
+                } else {
+                    showMessage('❌ ' + result.message, 'error');
+                }
+
+            } catch (error) {
+                console.error('Profil speichern Fehler:', error);
+                showMessage('❌ Verbindungsfehler beim Speichern', 'error');
+            } finally {
+                const saveBtn = document.getElementById('saveProfileBtn');
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 Profil speichern';
+            }
+        }
+
+        async function logout() {
+            try {
+                // Server über Logout informieren
+                await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId: currentUser.id })
+                });
+
+                // Lokale Daten löschen
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentGroup');
+
+                showMessage('✅ Erfolgreich ausgeloggt!', 'success');
+
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Logout Fehler:', error);
+                // Auch bei Fehler ausloggen
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentGroup');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.innerHTML = `<div class="message ${type}">${text}</div>`;
+            
+            setTimeout(() => {
+                messageBox.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

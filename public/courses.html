@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurse durchsuchen - Schatzinsel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .search-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .search-controls {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        input, select {
+            padding: 12px 15px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        select option {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            height: fit-content;
+        }
+
+        .btn:hover {
+            background: #357638;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+        }
+
+        .btn-secondary:hover {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-count {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .course-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            border-color: #4CAF50;
+            box-shadow: 0 15px 35px rgba(76, 175, 80, 0.3);
+        }
+
+        .course-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .course-icon {
+            font-size: 3rem;
+            background: rgba(76, 175, 80, 0.2);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .course-info h3 {
+            font-size: 1.3rem;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+
+        .course-category {
+            background: rgba(76, 175, 80, 0.3);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .course-description {
+            margin: 15px 0;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .course-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .course-stat {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .course-topics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .topic-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .course-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .loading {
+            text-align: center;
+            color: #4CAF50;
+            font-size: 1.2rem;
+            margin: 50px 0;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 4px solid rgba(76, 175, 80, 0.3);
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.7;
+        }
+
+        .empty-state h3 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: rgba(76, 175, 80, 0.3);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .search-controls {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .results-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .sort-controls {
+                justify-content: center;
+            }
+
+            .course-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="dashboard.html" class="back-btn">← Zurück zum Dashboard</a>
+
+        <div class="header">
+            <h1>📚 Kurse durchsuchen</h1>
+            <p>Entdecke strukturierte Lernpfade für deine Piratenlaufbahn!</p>
+        </div>
+
+        <!-- Suchbereich -->
+        <div class="search-section">
+            <div class="search-controls">
+                <div class="form-group">
+                    <label for="searchInput">Suche</label>
+                    <input type="text" id="searchInput" placeholder="Kurs, Thema oder Schlagwort suchen...">
+                </div>
+                <div class="form-group">
+                    <label for="categoryFilter">Kategorie</label>
+                    <select id="categoryFilter">
+                        <option value="">Alle Kategorien</option>
+                        <!-- Wird dynamisch gefüllt -->
+                    </select>
+                </div>
+                <button class="btn" id="searchBtn">🔍 Suchen</button>
+            </div>
+        </div>
+
+        <!-- Ergebnisse Header -->
+        <div class="results-header" id="resultsHeader" style="display: none;">
+            <div class="results-count" id="resultsCount">0 Kurse gefunden</div>
+            <div class="sort-controls">
+                <label for="sortSelect">Sortieren:</label>
+                <select id="sortSelect">
+                    <option value="title">Titel</option>
+                    <option value="enrolled">Beliebtheit</option>
+                    <option value="rating">Bewertung</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loadingIndicator">
+            <span class="spinner"></span>
+            Lade Kurse...
+        </div>
+
+        <!-- Kurse Grid -->
+        <div class="courses-grid" id="coursesGrid" style="display: none;">
+            <!-- Kurse werden dynamisch geladen -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <h3>🏴‍☠️</h3>
+            <p>Keine Kurse gefunden.</p>
+            <p>Versuche andere Suchbegriffe oder Filter.</p>
+            <button class="btn" onclick="clearFilters()">🔄 Filter zurücksetzen</button>
+        </div>
+    </div>
+
+    <script>
+        let allCourses = [];
+        let filteredCourses = [];
+        let filters = { categories: [] };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCourses();
+            setupEventListeners();
+        });
+
+        async function loadCourses() {
+            try {
+                document.getElementById('loadingIndicator').style.display = 'block';
+
+                const response = await fetch('/api/courses');
+                const data = await response.json();
+
+                if (data.success) {
+                    allCourses = data.courses;
+                    filteredCourses = [...allCourses];
+                    filters = data.filters;
+                    
+                    populateFilters();
+                    displayCourses();
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Kurse laden Fehler:', error);
+                showEmptyState();
+            } finally {
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }
+        }
+
+        function populateFilters() {
+            // Kategorien
+            const categorySelect = document.getElementById('categoryFilter');
+            filters.categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+        }
+
+        function displayCourses() {
+            const coursesGrid = document.getElementById('coursesGrid');
+            const resultsHeader = document.getElementById('resultsHeader');
+            const resultsCount = document.getElementById('resultsCount');
+
+            if (filteredCourses.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+            resultsHeader.style.display = 'flex';
+            coursesGrid.style.display = 'grid';
+
+            resultsCount.textContent = `${filteredCourses.length} Kurs${filteredCourses.length !== 1 ? 'e' : ''} gefunden`;
+
+            coursesGrid.innerHTML = '';
+
+            filteredCourses.forEach(course => {
+                const courseCard = createCourseCard(course);
+                coursesGrid.appendChild(courseCard);
+            });
+        }
+
+        function createCourseCard(course) {
+            const card = document.createElement('div');
+            card.className = 'course-card';
+            card.onclick = () => viewCourseDetails(course.id);
+
+            card.innerHTML = `
+                <div class="course-header">
+                    <div class="course-icon">${course.icon}</div>
+                    <div class="course-info">
+                        <h3>${course.title}</h3>
+                        <div class="course-category">${course.category}</div>
+                    </div>
+                </div>
+                <div class="course-description">${course.description}</div>
+                <div class="course-topics">
+                    ${course.topics.map(topic => `<span class="topic-tag">${topic}</span>`).join('')}
+                </div>
+                <div class="course-stats">
+                    <div class="course-stat">
+                        <div class="stat-value">${course.lessons}</div>
+                        <div class="stat-label">Lektionen</div>
+                    </div>
+                    <div class="course-stat">
+                        <div class="stat-value">${course.enrolled}</div>
+                        <div class="stat-label">Teilnehmer</div>
+                    </div>
+                    <div class="course-stat">
+                        <div class="stat-value">${course.rating}⭐</div>
+                        <div class="stat-label">Bewertung</div>
+                    </div>
+                </div>
+                <div class="course-actions">
+                    <button class="btn btn-small" onclick="enrollCourse(${course.id}); event.stopPropagation();">
+                        📝 Einschreiben
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="previewCourse(${course.id}); event.stopPropagation();">
+                        👁️ Vorschau
+                    </button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function setupEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const searchBtn = document.getElementById('searchBtn');
+            const sortSelect = document.getElementById('sortSelect');
+
+            searchBtn.addEventListener('click', filterCourses);
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') filterCourses();
+            });
+            categoryFilter.addEventListener('change', filterCourses);
+            sortSelect.addEventListener('change', sortCourses);
+        }
+
+        function filterCourses() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+
+            filteredCourses = allCourses.filter(course => {
+                const matchesSearch = !searchTerm || 
+                    course.title.toLowerCase().includes(searchTerm) ||
+                    course.description.toLowerCase().includes(searchTerm) ||
+                    course.topics.some(topic => topic.toLowerCase().includes(searchTerm));
+
+                const matchesCategory = !categoryFilter || course.category === categoryFilter;
+
+                return matchesSearch && matchesCategory;
+            });
+
+            displayCourses();
+        }
+
+        function sortCourses() {
+            const sortBy = document.getElementById('sortSelect').value;
+
+            filteredCourses.sort((a, b) => {
+                switch (sortBy) {
+                    case 'title':
+                        return a.title.localeCompare(b.title);
+                    case 'enrolled':
+                        return b.enrolled - a.enrolled;
+                    case 'rating':
+                        return b.rating - a.rating;
+                    default:
+                        return 0;
+                }
+            });
+
+            displayCourses();
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('categoryFilter').value = '';
+            filteredCourses = [...allCourses];
+            displayCourses();
+        }
+
+        function showEmptyState() {
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('coursesGrid').style.display = 'none';
+            document.getElementById('resultsHeader').style.display = 'none';
+        }
+
+        function viewCourseDetails(courseId) {
+            window.location.href = `course-details.html?id=${courseId}`;
+        }
+
+        function enrollCourse(courseId) {
+            // Hier würde die Einschreibungslogik kommen
+            alert(`Einschreibung in Kurs ${courseId} erfolgreich!`);
+        }
+
+        function previewCourse(courseId) {
+            // Hier würde die Vorschau-Logik kommen
+            window.open(`course-preview.html?id=${courseId}`, '_blank');
+        }
+    </script>
+</body>
+</html>

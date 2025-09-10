@@ -643,6 +643,398 @@ app.get('/api/profile/:id', (req, res) => {
   });
 });
 
+// Zusätzliche Server-Routen für fehlende Features
+
+// Admin: Benutzer verwalten (deaktivieren/aktivieren)
+app.get('/api/admin/users', (req, res) => {
+  try {
+    const adminUser = users.find(u => u.id === parseInt(req.query.adminId));
+    
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Keine Admin-Berechtigung'
+      });
+    }
+    
+    const userList = users.map(user => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      prename: user.prename,
+      surname: user.surname,
+      role: user.role,
+      totalGoldtaler: user.totalGoldtaler,
+      completedQuizzes: user.completedQuizzes,
+      createdAt: user.createdAt,
+      active: user.active !== false // Default: aktiv
+    }));
+    
+    res.json({
+      success: true,
+      users: userList,
+      total: userList.length
+    });
+    
+  } catch (error) {
+    console.error('Admin Users Fehler:', error);
+    res.status(500).json({ success: false, message: 'Server Fehler' });
+  }
+});
+
+// Admin: Benutzer deaktivieren/aktivieren
+app.patch('/api/admin/users/:id/toggle-active', (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { adminId } = req.body;
+    
+    const adminUser = users.find(u => u.id === adminId);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Keine Admin-Berechtigung'
+      });
+    }
+    
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Benutzer nicht gefunden'
+      });
+    }
+    
+    // Admin kann sich nicht selbst deaktivieren
+    if (user.id === adminId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Sie können sich nicht selbst deaktivieren'
+      });
+    }
+    
+    user.active = user.active !== false ? false : true;
+    
+    res.json({
+      success: true,
+      message: `Benutzer ${user.active ? 'aktiviert' : 'deaktiviert'}`,
+      user: {
+        id: user.id,
+        username: user.username,
+        active: user.active
+      }
+    });
+    
+  } catch (error) {
+    console.error('Toggle User Active Fehler:', error);
+    res.status(500).json({ success: false, message: 'Server Fehler' });
+  }
+});
+
+// User: Profil bearbeiten
+app.patch('/api/profile/:id', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { prename, surname, email, avatar, currentPassword, newPassword } = req.body;
+    
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Benutzer nicht gefunden'
+      });
+    }
+    
+    // Passwort ändern falls gewünscht
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Aktuelles Passwort erforderlich'
+        });
+      }
+      
+      const isValidPassword = await comparePassword(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Aktuelles Passwort ist falsch'
+        });
+      }
+      
+      user.password = await hashPassword(newPassword);
+    }
+    
+    // E-Mail-Duplikat prüfen
+    if (email && email !== user.email) {
+      const emailExists = users.find(u => u.email === email && u.id !== userId);
+      if (emailExists) {
+        return res.status(400).json({
+          success: false,
+          message: 'E-Mail bereits vergeben'
+        });
+      }
+      user.email = email;
+    }
+    
+    // Andere Felder aktualisieren
+    if (prename) user.prename = prename;
+    if (surname) user.surname = surname;
+    if (avatar) user.avatar = avatar;
+    
+    user.updatedAt = new Date().toISOString();
+    
+    res.json({
+      success: true,
+      message: 'Profil erfolgreich aktualisiert',
+      user: { ...user, password: undefined }
+    });
+    
+  } catch (error) {
+    console.error('Profil bearbeiten Fehler:', error);
+    res.status(500).json({ success: false, message: 'Server Fehler' });
+  }
+});
+
+// User: Logout (Session invalidieren)
+app.post('/api/logout', (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = users.find(u => u.id === userId);
+    
+    if (user) {
+      user.lastLogout = new Date().toISOString();
+      console.log(`👋 Benutzer ausgeloggt: ${user.username}`);
+    }
+    
+    res.json({
+      success: true,
+      message: 'Erfolgreich ausgeloggt'
+    });
+    
+  } catch (error) {
+    console.error('Logout Fehler:', error);
+    res.status(500).json({ success: false, message: 'Server Fehler' });
+  }
+});
+
+// Kurse/Lernpfade System
+let courses = [
+  {
+    id: 1,
+    title: "Grundlagen der Mathematik",
+    description: "Lerne die Basics: Addition, Subtraktion, Multiplikation",
+    category: "Mathematik",
+    difficulty: "Anfänger",
+    estimatedTime: "30 Minuten",
+    topics: ["Grundrechenarten", "Bruchrechnung", "Prozentrechnung"],
+    questionIds: [1, 2], // Verweise auf Fragen
+    icon: "🧮",
+    active: true
+  },
+  {
+    id: 2,
+    title: "Web-Entwicklung Basics",
+    description: "HTML, CSS und JavaScript für Einsteiger",
+    category: "Informatik",
+    difficulty: "Anfänger",
+    estimatedTime: "45 Minuten",
+    topics: ["HTML Grundlagen", "CSS Styling", "JavaScript Basics"],
+    questionIds: [3, 4],
+    icon: "💻",
+    active: true
+  },
+  {
+    id: 3,
+    title: "Deutsche Geschichte",
+    description: "Von der Antike bis zur Moderne",
+    category: "Geschichte",
+    difficulty: "Mittel",
+    estimatedTime: "60 Minuten",
+    topics: ["Mittelalter", "Neuzeit", "20. Jahrhundert"],
+    questionIds: [],
+    icon: "🏛️",
+    active: true
+  },
+  {
+    id: 4,
+    title: "Physik Experimente",
+    description: "Verstehe die Welt durch Experimente",
+    category: "Naturwissenschaften",
+    difficulty: "Fortgeschritten",
+    estimatedTime: "90 Minuten",
+    topics: ["Mechanik", "Optik", "Elektrizität"],
+    questionIds: [],
+    icon: "🔬",
+    active: true
+  }
+];
+
+// Kurse durchsuchen
+app.get('/api/courses', (req, res) => {
+  try {
+    const { category, difficulty, search } = req.query;
+    let filteredCourses = courses.filter(course => course.active);
+    
+    // Nach Kategorie filtern
+    if (category) {
+      filteredCourses = filteredCourses.filter(course => 
+        course.category.toLowerCase() === category.toLowerCase()
+      );
+    }
+    
+    // Nach Schwierigkeit filtern
+    if (difficulty) {
+      filteredCourses = filteredCourses.filter(course => 
+        course.difficulty.toLowerCase() === difficulty.toLowerCase()
+      );
+    }
+    
+    // Suche im Titel und Beschreibung
+    if (search) {
+      const searchTerm = search.toLowerCase();
+      filteredCourses = filteredCourses.filter(course => 
+        course.title.toLowerCase().includes(searchTerm) ||
+        course.description.toLowerCase().includes(searchTerm) ||
+        course.topics.some(topic => topic.toLowerCase().includes(searchTerm))
+      );
+    }
+    
+    // Statistiken für jeden Kurs hinzufügen
+    const coursesWithStats = filteredCourses.map(course => ({
+      ...course,
+      questionCount: course.questionIds.length,
+      completionRate: Math.floor(Math.random() * 100), // Simuliert
+      enrolledUsers: Math.floor(Math.random() * 50) + 5 // Simuliert
+    }));
+    
+    res.json({
+      success: true,
+      courses: coursesWithStats,
+      total: coursesWithStats.length,
+      filters: {
+        categories: [...new Set(courses.map(c => c.category))],
+        difficulties: [...new Set(courses.map(c => c.difficulty))]
+      }
+    });
+    
+  } catch (error) {
+    console.error('Kurse durchsuchen Fehler:', error);
+    res.status(500).json({ success: false, message: 'Server Fehler' });
+  }
+});
+
+// Kurs Details abrufen
+app.get('/api/courses/:id', (req, res) => {
+  try {
+    const courseId = parseInt(req.params.id);
+    const course = courses.find(c => c.id === courseId && c.active);
+    
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Kurs nicht gefunden'
+      });
+    }
+    
+    // Fragen für diesen Kurs laden
+    const courseQuestions = questions.filter(q => 
+      course.questionIds.includes(q.id) && q.approved
+    ).map(({ correct, ...question }) => question);
+    
+    res.json({
+      success: true,
+      course: {
+        ...course,
+        questions: courseQuestions,
+        questionCount: courseQuestions.length,
+        completionRate: Math.floor(Math.random() * 100),
+        enrolledUsers: Math.floor(Math.random() * 50) + 5,
+        reviews: Math.floor(Math.random() * 20) + 3,
+        rating: (Math.random() * 2 + 3).toFixed(1) // 3.0 - 5.0
+      }
+    });
+    
+  } catch (error) {
+    console.error('Kurs Details Fehler:', error);
+    res.status(500).json({ success: false, message: 'Server Fehler' });
+  }
+});
+
+// Admin: Ersten Admin-User erstellen (falls noch keiner existiert)
+const createAdminUser = async () => {
+  const adminExists = users.find(u => u.role === 'admin');
+  
+  if (!adminExists) {
+    const adminUser = {
+      id: currentUserId++,
+      prename: 'System',
+      surname: 'Administrator',
+      username: 'admin',
+      email: 'admin@schatzinsel.de',
+      password: await hashPassword('admin123'), // ÄNDERN SIE DAS IN PRODUKTION!
+      avatar: 'avatar1.jpeg',
+      role: 'admin',
+      totalGoldtaler: 0,
+      completedQuizzes: 0,
+      active: true,
+      createdAt: new Date().toISOString()
+    };
+    
+    users.push(adminUser);
+    console.log('👑 Admin-Benutzer erstellt: admin/admin123');
+  }
+};
+
+// Login prüfen ob User aktiv ist
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    const user = users.find(u => u.username === username);
+    if (!user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Ungültiger Benutzername oder Passwort' 
+      });
+    }
+    
+    // Prüfen ob User aktiv ist
+    if (user.active === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Ihr Account wurde deaktiviert. Kontaktieren Sie den Administrator.'
+      });
+    }
+    
+    const isValidPassword = await comparePassword(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Ungültiger Benutzername oder Passwort' 
+      });
+    }
+    
+    user.lastLogin = new Date().toISOString();
+    
+    res.json({ 
+      success: true, 
+      message: 'Erfolgreich eingeloggt!',
+      user: { ...user, password: undefined }
+    });
+    
+  } catch (error) {
+    console.error('Login Fehler:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server Fehler beim Login' 
+    });
+  }
+});
+
+// Admin-User beim Start erstellen
+createAdminUser();
+
+
 // Server starten
 server.listen(PORT, () => {
   console.log(`🚀 Kooperatives Lern-Quiz System läuft auf Port ${PORT}`);
