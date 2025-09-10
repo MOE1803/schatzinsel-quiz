@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schatzinsel Quiz - Startseite</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .status {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            border: 2px solid #4CAF50;
+        }
+        
+        .buttons {
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 50px;
+            margin: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn:hover {
+            background: #357638;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #2196F3;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: #1976D2;
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .feature h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        
+        .feature p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏴‍☠️ Schatzinsel Quiz ⚓</h1>
+        
+        <p>Ahoi, Matrose! Willkommen auf der legendären Schatzinsel!</p>
+        <p>Teste dein Wissen und werde zum klügsten Piraten der sieben Weltmeere!</p>
+        
+        <div class="status">
+            <p><strong>✅ Server läuft erfolgreich!</strong></p>
+            <p id="userCount">👥 Piraten an Bord: Wird geladen...</p>
+            <p>🎯 Quiz bereit zum Spielen!</p>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>🎓 Lernen</h3>
+                <p>Verschiedene Schwierigkeitsgrade für optimales Lernen</p>
+            </div>
+            <div class="feature">
+                <h3>🏆 Wettkampf</h3>
+                <p>Tritt gegen andere Piraten an und klettere die Rangliste hoch</p>
+            </div>
+            <div class="feature">
+                <h3>📊 Statistiken</h3>
+                <p>Verfolge deinen Fortschritt und deine Erfolge</p>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <a href="ISEF01_Registrierung.html" class="btn">
+                🚀 Jetzt registrieren!
+            </a>
+            <a href="/api/quiz/questions" class="btn btn-secondary">
+                📋 Quiz-Fragen anzeigen
+            </a>
+        </div>
+        
+        <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.8;">
+            <p>🔧 Entwickelt mit Node.js & Express</p>
+        </div>
+    </div>
+
+    <script>
+        // Dynamische Benutzeranzahl laden (optional)
+        fetch('/api/leaderboard')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('userCount').textContent = 
+                        `👥 ${data.leaderboard.length} Piraten an Bord!`;
+                }
+            })
+            .catch(error => {
+                console.log('Leaderboard noch nicht verfügbar:', error);
+                document.getElementById('userCount').textContent = 
+                    '👥 Sei der erste Pirat an Bord!';
+            });
+    </script>
+</body>
+</html>

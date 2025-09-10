@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <title>Registierung</title>
+    </head>
+
+    <body>
+        <div class="regist-box">
+            <h1>Registrierung Schatzinsel</h1>
+            <form id="registerForm" action="/regsitieren" methode="post">
+            <input type="text" id="firstname" placeholder="Vorname" required><br>
+            <input type="text" id="surname" placeholder="Nachname" required><br>
+            <input type="text" id="userrname" placeholder="Nutzername" required minlength="3"><br> <!--mindest Länge des Nutzernamen: 3 Zeichen-->
+            <input type="email" id="email" placeholder="Email" required><br>
+            <input type="password" id="password" placeholder="Passwort" required minlength="5"><br> <!--mindest Länge des Passwort: 5 Zeichen-->
+
+        <p>Bitte wähle nun noch einen Avatar aus</p>
+
+        <div class="avatar-auswahl">
+            <label>
+            <input type="radio" name="avatar" value="avatar1.jpeg" required>
+            <img src="avatar1.jpeg" alt="Pirat 1">
+            </label>
+            <label>
+            <input type="radio" name="avatar" value="avatar2.jpeg">
+            <img src="avatar2.jpeg" alt="Pirat 2">
+            </label>
+            <label>
+            <input type="radio" name="avatar" value="avatar3.jpeg">
+            <img src="avatar3.jpeg" alt="Papagei">
+            </label>
+        </div>
+            <input type="submit" value="Registrieren">
+            </form>
+    </body>
+</html>
+
+
+
+<!--Gestalung der Seite-->
+<style>
+    h1 {
+    -webkit-text-stroke-width: 0.5px;
+    -webkit-text-stroke-color: black
+    }
+    
+     body {
+      margin: 0px;
+      padding: 0;
+      background-image: url("Die Schatzinsel2.jpeg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100vh;
+      font-family:Arial, Helvetica, sans-serif;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      
+    }
+
+    .regist-box {
+    background-color: none;
+    padding: 3em;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+      width: 80%;
+      padding: 0.8em;
+      margin: 0.5em 0;
+      border: none;
+      border-radius: 0.5em;
+      font-size: 1em;
+    }
+
+    input[type="submit"] {
+      width: 87%;
+      padding: 0.8em;
+      margin: 0.5em 0;
+      border: none;
+      border-radius: 0.5em;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #357638;
+    }
+
+
+/* Design für die Avatare */
+
+    .avatar-auswahl {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+    margin: 1em 0;
+    }
+
+    .avatar-auswahl label {
+    cursor: pointer;
+    border: 3px solid transparent;
+    border-radius: 10px;
+    transition: border-color 0.3s;
+    }
+
+    .avatar-auswahl img {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    }
+
+    .avatar-auswahl input[type="radio"] {
+    display: none;
+    }
+
+    .avatar-auswahl input[type="radio"]:checked + img {
+    border: 3px solid #4CAF50;
+    }
+
+    p {
+    text-align: center;
+    }
+
+
+/* Design für Smartphones */
+
+@media (max-width: 600px) {
+
+.regist-box {
+ width: 90%;
+ padding: 1.5em;
+ background-color: none;
+ border-radius: 1em;
+  }
+
+  h1 {
+    font-size: 1.4em;
+  }
+
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="submit"] {
+    font-size: 0.9em;
+    padding: 0.6em;
+  }
+
+  .avatar-auswahl {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .avatar-auswahl img {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+
+/* Design für Tablets */
+@media (min-width: 601px) and (max-width: 1024px) {
+
+  .regist-box {
+    width: 80%;
+    max-width: 500px;
+    padding: 2em;
+    background-color: none;
+  }
+
+  h1 {
+    font-size: 1.8em;
+  }
+
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="submit"] {
+    font-size: 1em;
+    padding: 0.7em;
+  }
+
+  .avatar-auswahl {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5em;
+  }
+
+  .avatar-auswahl img {
+    width: 90px;
+    height: 90px;
+      }
+    }
+</style>
+
+<script>
+document.getElementById("registerForm").addEventListener("submit", function (event) {
+        event.preventDefault();               // normales Absenden verhindern
+        // TODO: hier ggf. per fetch('/registrieren', {method:'POST', body:FormData}) speichern
+        window.location.href = "ISEF01_Karte.html"; // Weiterleitung
+      });
+</script>

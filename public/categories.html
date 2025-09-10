@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kategorien - Kooperatives Lern-Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .user-info {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #4CAF50;
+        }
+
+        .user-stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            border-color: #4CAF50;
+            box-shadow: 0 15px 35px rgba(76, 175, 80, 0.3);
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
+        .category-card:hover::before {
+            opacity: 1;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .category-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .category-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .category-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .category-stat {
+            text-align: center;
+        }
+
+        .category-stat-value {
+            display: block;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #4CAF50;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            background: #357638;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .group-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: rgba(30, 60, 114, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            margin: 50px auto;
+            text-align: center;
+            position: relative;
+            border: 2px solid #4CAF50;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+        }
+
+        .group-info {
+            margin: 20px 0;
+        }
+
+        .group-members {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .member {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            min-width: 80px;
+        }
+
+        .member-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #4CAF50;
+            margin-bottom: 8px;
+        }
+
+        .member-name {
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .waiting-indicator {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(76, 175, 80, 0.3);
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s linear infinite;
+            margin: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+
+        .message.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #f44336;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(76, 175, 80, 0.3);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .user-info {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .user-stats {
+                gap: 20px;
+            }
+
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .back-btn {
+                position: static;
+                display: inline-block;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="dashboard.html" class="back-btn">← Zurück zum Dashboard</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>🏴‍☠️ Wähle deine Kategorie ⚓</h1>
+            <p>Tritt einer Gruppe bei und starte das kooperative Quiz!</p>
+        </div>
+
+        <div class="user-info" id="userInfo">
+            <div class="user-profile">
+                <img id="userAvatar" src="" alt="Avatar" class="user-avatar">
+                <div>
+                    <h3 id="userName">Lade Profil...</h3>
+                    <p id="userRole">Pirat</p>
+                </div>
+            </div>
+            <div class="user-stats">
+                <div class="stat">
+                    <div class="stat-value" id="totalGoldtaler">0</div>
+                    <div class="stat-label">Goldtaler</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="completedQuizzes">0</div>
+                    <div class="stat-label">Quizzes</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="messageBox"></div>
+
+        <div class="categories-grid" id="categoriesGrid">
+            <!-- Kategorien werden dynamisch geladen -->
+        </div>
+    </div>
+
+    <!-- Group Modal -->
+    <div class="group-modal" id="groupModal">
+        <div class="modal-content">
+            <button class="close-modal" id="closeModal">&times;</button>
+            <h2 id="modalTitle">🏴‍☠️ Gruppe beitreten</h2>
+            <div id="modalMessage"></div>
+            
+            <div class="group-info">
+                <p><strong>Kategorie:</strong> <span id="selectedCategory">-</span></p>
+                <p><strong>Gruppengröße:</strong> <span id="groupSize">-/5</span> Piraten</p>
+            </div>
+            
+            <div class="group-members" id="groupMembers">
+                <!-- Gruppenmitglieder werden hier angezeigt -->
+            </div>
+            
+            <div id="waitingArea" style="display: none;">
+                <div class="waiting-indicator"></div>
+                <p>Warte auf weitere Piraten...</p>
+                <small>Minimum 2 Piraten benötigt zum Starten</small>
+            </div>
+            
+            <div id="groupActions">
+                <button class="btn" id="startQuizBtn" style="display: none;">🚀 Quiz starten!</button>
+                <button class="btn" id="leaveGroupBtn" style="background: #f44336;">❌ Gruppe verlassen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentGroup = null;
+        let categories = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            if (!currentUser) {
+                alert('Bitte loggen Sie sich ein.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            loadUserProfile();
+            loadCategories();
+            setupEventListeners();
+        });
+
+        function loadUserProfile() {
+            document.getElementById('userName').textContent = currentUser.username;
+            document.getElementById('userRole').textContent = currentUser.role === 'admin' ? '👑 Admin' : '🏴‍☠️ Pirat';
+            document.getElementById('userAvatar').src = currentUser.avatar || 'avatar1.jpeg';
+            document.getElementById('totalGoldtaler').textContent = currentUser.totalGoldtaler || 0;
+            document.getElementById('completedQuizzes').textContent = currentUser.completedQuizzes || 0;
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                const data = await response.json();
+
+                if (data.success) {
+                    categories = data.categories;
+                    displayCategories();
+                } else {
+                    showMessage('Fehler beim Laden der Kategorien', 'error');
+                }
+            } catch (error) {
+                console.error('Kategorien Fehler:', error);
+                showMessage('Verbindungsfehler beim Laden der Kategorien', 'error');
+            }
+        }
+
+        function displayCategories() {
+            const categoriesGrid = document.getElementById('categoriesGrid');
+            categoriesGrid.innerHTML = '';
+
+            const categoryIcons = {
+                'Mathematik': '🧮',
+                'Informatik': '💻',
+                'Geschichte': '🏛️',
+                'Naturwissenschaften': '🔬'
+            };
+
+            categories.forEach(category => {
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.onclick = () => joinGroup(category.name);
+
+                card.innerHTML = `
+                    <span class="category-icon">${categoryIcons[category.name] || '📚'}</span>
+                    <div class="category-title">${category.name}</div>
+                    <div class="category-stats">
+                        <div class="category-stat">
+                            <span class="category-stat-value">${category.questionCount}</span>
+                            <span>Fragen</span>
+                        </div>
+                        <div class="category-stat">
+                            <span class="category-stat-value">${category.activeGroups}</span>
+                            <span>Aktive Gruppen</span>
+                        </div>
+                    </div>
+                    <button class="btn">⚓ Gruppe beitreten</button>
+                `;
+
+                categoriesGrid.appendChild(card);
+            });
+        }
+
+        async function joinGroup(categoryName) {
+            try {
+                showMessage('Suche nach verfügbarer Gruppe...', 'success');
+
+                const response = await fetch('/api/join-group', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        category: categoryName
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentGroup = data.group;
+                    localStorage.setItem('currentGroup', JSON.stringify(currentGroup));
+                    showGroupModal(categoryName, data.group);
+                } else {
+                    showMessage('❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Gruppe beitreten Fehler:', error);
+                showMessage('❌ Verbindungsfehler beim Beitreten der Gruppe', 'error');
+            }
+        }
+
+        function showGroupModal(categoryName, group) {
+            document.getElementById('selectedCategory').textContent = categoryName;
+            document.getElementById('groupSize').textContent = `${group.members.length}/5`;
+
+            // Gruppenmitglieder anzeigen
+            const membersContainer = document.getElementById('groupMembers');
+            membersContainer.innerHTML = '';
+
+            if (group.memberDetails) {
+                group.memberDetails.forEach(member => {
+                    const memberElement = document.createElement('div');
+                    memberElement.className = 'member';
+                    memberElement.innerHTML = `
+                        <img src="${member.avatar}" alt="${member.username}" class="member-avatar"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiM0Q0FGNTB8LyotCjx0ZXh0IHg9IjI1IiB5PSIzMCIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjE4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+PiuKAjemBoO+4jzwvdGV4dD4KPC9zdmc+Cg=='">
+                        <span class="member-name">${member.username}</span>
+                    `;
+                    membersContainer.appendChild(memberElement);
+                });
+            }
+
+            // Platzhalter für leere Slots
+            const emptySlots = 5 - group.members.length;
+            for (let i = 0; i < emptySlots; i++) {
+                const emptySlot = document.createElement('div');
+                emptySlot.className = 'member';
+                emptySlot.innerHTML = `
+                    <div class="member-avatar" style="background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 1.5rem; opacity: 0.5;">👤</span>
+                    </div>
+                    <span class="member-name" style="opacity: 0.5;">Warte...</span>
+                `;
+                membersContainer.appendChild(emptySlot);
+            }
+
+            // Status anzeigen
+            if (group.members.length >= 2) {
+                document.getElementById('waitingArea').style.display = 'none';
+                document.getElementById('startQuizBtn').style.display = 'block';
+                document.getElementById('modalMessage').innerHTML = 
+                    '<div class="message success">✅ Genug Piraten für das Quiz! Bereit zum Starten!</div>';
+            } else {
+                document.getElementById('waitingArea').style.display = 'block';
+                document.getElementById('startQuizBtn').style.display = 'none';
+                document.getElementById('modalMessage').innerHTML = 
+                    '<div class="message">⏳ Warte auf mehr Piraten...</div>';
+            }
+
+            document.getElementById('groupModal').style.display = 'block';
+        }
+
+        function setupEventListeners() {
+            document.getElementById('closeModal').onclick = () => {
+                document.getElementById('groupModal').style.display = 'none';
+            };
+
+            document.getElementById('startQuizBtn').onclick = () => {
+                window.location.href = 'quiz.html';
+            };
+
+            document.getElementById('leaveGroupBtn').onclick = () => {
+                // Gruppe verlassen (vereinfacht)
+                localStorage.removeItem('currentGroup');
+                document.getElementById('groupModal').style.display = 'none';
+                showMessage('Gruppe verlassen', 'success');
+            };
+
+            // Modal schließen bei Klick außerhalb
+            document.getElementById('groupModal').onclick = (e) => {
+                if (e.target.id === 'groupModal') {
+                    document.getElementById('groupModal').style.display = 'none';
+                }
+            };
+        }
+
+        function showMessage(text, type) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(() => {
+                messageBox.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

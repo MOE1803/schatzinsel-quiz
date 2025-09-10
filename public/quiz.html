@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kooperatives Quiz - Schatzinsel</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .quiz-section {
+            flex: 2;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .chat-section {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .quiz-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .quiz-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #4CAF50;
+        }
+
+        .info-card h3 {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .info-card p {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .question-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .question-number {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .options-container {
+            display: grid;
+            gap: 15px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: #4CAF50;
+        }
+
+        .option.correct {
+            background: rgba(76, 175, 80, 0.5);
+            border-color: #4CAF50;
+        }
+
+        .option.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            border-color: #f44336;
+        }
+
+        .option-letter {
+            background: #4CAF50;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .quiz-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: #357638;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #FF9800;
+        }
+
+        .results-container {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .score-display {
+            font-size: 4rem;
+            margin: 20px 0;
+            color: #4CAF50;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .goldtaler-display {
+            background: linear-gradient(45deg, #FFD700, #FFA000);
+            color: #1a1a1a;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        /* Chat-Styles */
+        .chat-header {
+            background: rgba(76, 175, 80, 0.3);
+            padding: 15px;
+            border-bottom: 2px solid #4CAF50;
+            text-align: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 15px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+
+        .message.own {
+            background: rgba(76, 175, 80, 0.3);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.other {
+            background: rgba(255, 255, 255, 0.15);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system {
+            background: rgba(255, 193, 7, 0.2);
+            align-self: center;
+            text-align: center;
+            font-style: italic;
+            border-radius: 20px;
+        }
+
+        .message.result {
+            background: rgba(76, 175, 80, 0.4);
+            align-self: center;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 20px;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .avatar-small {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .message-content {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 2px solid #4CAF50;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: white;
+            font-size: 0.9rem;
+            resize: none;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .group-members {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .member {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin: 2px;
+            background: rgba(76, 175, 80, 0.3);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .member-avatar {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .quiz-section {
+                flex: none;
+                height: 60vh;
+            }
+            
+            .chat-section {
+                flex: none;
+                height: 40vh;
+                border-left: none;
+                border-top: 3px solid #4CAF50;
+            }
+            
+            .quiz-container {
+                padding: 20px;
+            }
+            
+            .quiz-header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #4CAF50;
+            font-size: 1.2rem;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(76, 175, 80, 0.3);
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Quiz Sektion -->
+        <div class="quiz-section">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h1 id="quizTitle">🏴‍☠️ Kooperatives Quiz ⚓</h1>
+                    <p id="categoryDisplay">Kategorie wird geladen...</p>
+                </div>
+
+                <div class="quiz-info">
+                    <div class="info-card">
+                        <h3>Frage</h3>
+                        <p><span id="currentQuestion">-</span> / <span id="totalQuestions">-</span></p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Goldtaler</h3>
+                        <p id="currentScore">0</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Zeit</h3>
+                        <p id="timer">--:--</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Gruppe</h3>
+                        <p id="groupSize">-/5</p>
+                    </div>
+                </div>
+
+                <div id="loadingScreen" class="loading">
+                    <div class="spinner"></div>
+                    <span>Lade Quiz-Daten...</span>
+                </div>
+
+                <div id="quizContent" style="display: none;">
+                    <div class="question-container">
+                        <div class="question-number" id="questionNumber">Frage 1</div>
+                        <div class="question-text" id="questionText">Frage wird geladen...</div>
+                        <div class="options-container" id="optionsContainer">
+                            <!-- Optionen werden dynamisch geladen -->
+                        </div>
+                    </div>
+
+                    <div class="quiz-controls">
+                        <button class="btn" id="prevBtn" disabled>⬅️ Zurück</button>
+                        <div class="timer" id="questionTimer">⏱️ 30s</div>
+                        <button class="btn" id="nextBtn" disabled>Weiter ➡️</button>
+                    </div>
+                </div>
+
+                <div id="resultsScreen" style="display: none;">
+                    <div class="results-container">
+                        <h2>🏆 Quiz Abgeschlossen! 🏆</h2>
+                        <div class="score-display" id="finalScore">-/-</div>
+                        <div class="goldtaler-display" id="goldtalerEarned">
+                            💰 - Goldtaler verdient! 💰
+                        </div>
+                        <p id="resultMessage">Großartige Leistung, Pirat!</p>
+                        <button class="btn" id="newQuizBtn">🔄 Neues Quiz</button>
+                        <button class="btn" id="backToMenuBtn">🏠 Hauptmenü</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Sektion -->
+        <div class="chat-section">
+            <div class="chat-header">
+                <h3>💬 Gruppen-Chat</h3>
+                <div id="groupMembers" class="group-members">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span>Lade Gruppenmitglieder...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- Chat-Nachrichten werden hier eingefügt -->
+            </div>
+
+            <div class="chat-input-container">
+                <textarea 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="Schreibe eine Nachricht an deine Crew... 🏴‍☠️" 
+                    rows="2"
+                    maxlength="200"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Globale Variablen
+        let socket;
+        let currentUser = null;
+        let currentGroup = null;
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let score = 0;
+        let startTime = Date.now();
+        let questionStartTime = Date.now();
+        let questionTimer;
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', function() {
+            // Benutzer und Gruppe aus localStorage laden
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            currentGroup = JSON.parse(localStorage.getItem('currentGroup'));
+
+            if (!currentUser || !currentGroup) {
+                alert('Bitte loggen Sie sich ein und treten Sie einer Gruppe bei.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            initializeQuiz();
+            initializeChat();
+            setupEventListeners();
+        });
+
+        function initializeQuiz() {
+            document.getElementById('categoryDisplay').textContent = `Kategorie: ${currentGroup.category}`;
+            document.getElementById('groupSize').textContent = `${currentGroup.members.length}/5`;
+            
+            loadQuizQuestions();
+        }
+
+        async function loadQuizQuestions() {
+            try {
+                const response = await fetch(`/api/quiz/${currentGroup.category}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    questions = data.questions;
+                    document.getElementById('totalQuestions').textContent = questions.length;
+                    
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('quizContent').style.display = 'block';
+                    
+                    showQuestion(0);
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('Fehler beim Laden der Fragen:', error);
+                alert('Fehler beim Laden der Quiz-Fragen: ' + error.message);
+            }
+        }
+
+        function showQuestion(index) {
+            if (index >= questions.length) {
+                finishQuiz();
+                return;
+            }
+
+            currentQuestionIndex = index;
+            const question = questions[index];
+
+            document.getElementById('currentQuestion').textContent = index + 1;
+            document.getElementById('questionNumber').textContent = `Frage ${index + 1}`;
+            document.getElementById('questionText').textContent = question.question;
+
+            // Optionen anzeigen
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            question.options.forEach((option, optionIndex) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.onclick = () => selectOption(optionIndex);
+                
+                optionElement.innerHTML = `
+                    <div class="option-letter">${String.fromCharCode(65 + optionIndex)}</div>
+                    <span>${option}</span>
+                `;
+                
+                optionsContainer.appendChild(optionElement);
+            });
+
+            // Vorherige Antwort anzeigen
+            if (userAnswers[index] !== undefined) {
+                selectOption(userAnswers[index], false);
+            }
+
+            // Navigation aktualisieren
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = userAnswers[index] === undefined;
+
+            // Timer starten
+            startQuestionTimer();
+        }
+
+        function selectOption(optionIndex, animate = true) {
+            // Alle Optionen deselektieren
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            // Gewählte Option markieren
+            const selectedOption = document.querySelectorAll('.option')[optionIndex];
+            selectedOption.classList.add('selected');
+
+            if (animate) {
+                selectedOption.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    selectedOption.style.transform = 'translateY(-2px)';
+                }, 100);
+            }
+
+            // Antwort speichern
+            userAnswers[currentQuestionIndex] = optionIndex;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function startQuestionTimer() {
+            let timeLeft = 30;
+            questionStartTime = Date.now();
+            
+            const timerElement = document.getElementById('questionTimer');
+            
+            questionTimer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `⏱️ ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(questionTimer);
+                    // Auto-advance zur nächsten Frage oder finish
+                    if (currentQuestionIndex < questions.length - 1) {
+                        nextQuestion();
+                    } else {
+                        finishQuiz();
+                    }
+                }
+            }, 1000);
+        }
+
+        function nextQuestion() {
+            clearInterval(questionTimer);
+            showQuestion(currentQuestionIndex + 1);
+        }
+
+        function prevQuestion() {
+            clearInterval(questionTimer);
+            showQuestion(currentQuestionIndex - 1);
+        }
+
+        async function finishQuiz() {
+            clearInterval(questionTimer);
+            
+            const totalTime = Math.floor((Date.now() - startTime) / 1000);
+            
+            try {
+                const response = await fetch('/api/submit-quiz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        groupId: currentGroup.id,
+                        category: currentGroup.category,
+                        answers: userAnswers,
+                        timeSpent: totalTime
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showResults(result.result);
+                    
+                    // Ergebnis im Chat teilen
+                    if (socket) {
+                        socket.emit('shareResult', {
+                            score: result.result.score,
+                            totalQuestions: questions.length
+                        });
+                    }
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Fehler beim Einreichen des Quiz:', error);
+                alert('Fehler beim Einreichen des Quiz: ' + error.message);
+            }
+        }
+
+        function showResults(result) {
+            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('resultsScreen').style.display = 'block';
+
+            document.getElementById('finalScore').textContent = `${result.score}/${result.totalQuestions}`;
+            document.getElementById('goldtalerEarned').textContent = `💰 ${result.goldtaler} Goldtaler verdient! 💰`;
+            document.getElementById('resultMessage').textContent = result.message;
+            document.getElementById('currentScore').textContent = result.goldtaler;
+        }
+
+        // Chat-Funktionalität
+        function initializeChat() {
+            // Socket.IO Verbindung aufbauen
+            socket = io();
+
+            socket.on('connect', () => {
+                console.log('Chat verbunden');
+                socket.emit('joinGroup', {
+                    userId: currentUser.id,
+                    groupId: currentGroup.id
+                });
+            });
+
+            socket.on('chatHistory', (messages) => {
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.innerHTML = '';
+                messages.forEach(message => displayMessage(message));
+                scrollToBottom();
+            });
+
+            socket.on('newMessage', (message) => {
+                displayMessage(message);
+                scrollToBottom();
+            });
+
+            // Gruppenmitglieder anzeigen
+            displayGroupMembers();
+        }
+
+        function displayGroupMembers() {
+            const groupMembersContainer = document.getElementById('groupMembers');
+            
+            if (currentGroup.memberDetails) {
+                groupMembersContainer.innerHTML = '';
+                currentGroup.memberDetails.forEach(member => {
+                    const memberElement = document.createElement('div');
+                    memberElement.className = 'member';
+                    memberElement.innerHTML = `
+                        <img src="${member.avatar}" alt="${member.username}" class="member-avatar" 
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iOCIgY3k9IjgiIHI9IjgiIGZpbGw9IiM0Q0FGNTB8LyotCjx0ZXh0IHg9IjgiIHk9IjExIiBmb250LWZhbWlseT0iYXJpYWwiIGZvbnQtc2l6ZT0iOCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPvCfj4/igI3imaDvuI88L3RleHQ+Cjwvc3ZnPgo='">
+                        ${member.username}
+                    `;
+                    groupMembersContainer.appendChild(memberElement);
+                });
+            }
+        }
+
+        function displayMessage(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            
+            let messageClass = 'message ';
+            if (message.type === 'system') {
+                messageClass += 'system';
+            } else if (message.type === 'result') {
+                messageClass += 'result';
+            } else if (message.userId === currentUser.id) {
+                messageClass += 'own';
+            } else {
+                messageClass += 'other';
+            }
+            
+            messageElement.className = messageClass;
+            
+            let messageContent = '';
+            if (message.type !== 'system' && message.type !== 'result' && message.userId !== 'system') {
+                messageContent = `
+                    <div class="message-header">
+                        <img src="${message.avatar || 'default-avatar.png'}" alt="${message.username}" class="avatar-small"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMTAiIGZpbGw9IiM0Q0FGNTB8LyotCjx0ZXh0IHg9IjEwIiB5PSIxNCIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjEwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+PiuKAjemBoO+4jzwvdGV4dD4KPC9zdmc+Cg=='">
+                        <strong>${message.username}</strong>
+                        <span>${formatTime(message.timestamp)}</span>
+                    </div>
+                `;
+            }
+            
+            messageContent += `<div class="message-content">${message.message}</div>`;
+            messageElement.innerHTML = messageContent;
+            
+            chatMessages.appendChild(messageElement);
+        }
+
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('de-DE', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        function setupEventListeners() {
+            // Quiz Navigation
+            document.getElementById('nextBtn').onclick = () => {
+                if (currentQuestionIndex < questions.length - 1) {
+                    nextQuestion();
+                } else {
+                    finishQuiz();
+                }
+            };
+
+            document.getElementById('prevBtn').onclick = prevQuestion;
+
+            // Chat Input
+            const chatInput = document.getElementById('chatInput');
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Results Buttons
+            document.getElementById('newQuizBtn').onclick = () => {
+                window.location.href = 'categories.html';
+            };
+
+            document.getElementById('backToMenuBtn').onclick = () => {
+                window.location.href = 'dashboard.html';
+            };
+        }
+
+        function sendMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+
+            if (message && socket) {
+                socket.emit('sendMessage', { message });
+                chatInput.value = '';
+            }
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'TEXTAREA') return;
+
+            switch(e.key) {
+                case 'ArrowLeft':
+                    if (!document.getElementById('prevBtn').disabled) {
+                        prevQuestion();
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (!document.getElementById('nextBtn').disabled) {
+                        nextQuestion();
+                    }
+                    break;
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                    const optionIndex = parseInt(e.key) - 1;
+                    if (optionIndex < questions[currentQuestionIndex]?.options.length) {
+                        selectOption(optionIndex);
+                    }
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
