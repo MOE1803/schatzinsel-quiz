@@ -8,10 +8,12 @@
     <body>
         <div class="regist-box">
             <h1>Registrierung Schatzinsel</h1>
-            <form id="registerForm" action="/regsitieren" methode="post">
+            <form id="registerForm" action="/regsitieren" method="post">
+             <!--  <label for="firstName">Vorname:</label>
+              <input name="firstName" id="firstName" type="text" autocomplete="given-name" /><br>-->
             <input type="text" id="firstname" placeholder="Vorname" required><br>
             <input type="text" id="surname" placeholder="Nachname" required><br>
-            <input type="text" id="userrname" placeholder="Nutzername" required minlength="3"><br> <!--mindest Länge des Nutzernamen: 3 Zeichen-->
+            <input type="text" id="username" placeholder="Nutzername" required minlength="3"><br> <!--mindest Länge des Nutzernamen: 3 Zeichen-->
             <input type="email" id="email" placeholder="Email" required><br>
             <input type="password" id="password" placeholder="Passwort" required minlength="5"><br> <!--mindest Länge des Passwort: 5 Zeichen-->
 
@@ -48,7 +50,7 @@
      body {
       margin: 0px;
       padding: 0;
-      background-image: url("Die Schatzinsel2.jpeg");
+      background-image: url("Schatzinsel.jpeg");
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
